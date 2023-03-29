@@ -1,24 +1,46 @@
-name: Workflow
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - test_application
-  workflow_dispatch:
-jobs:
-  code-analysis:
-    runs-on: ubuntu-latest
+  pull_request:
+    branches:
+      - test_application
 
+jobs:
+  build:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-          
-      - name: Install dependencies
+      - name: Build code
         run: |
           pip install -r requirements.txt
           python app.py
+      - name: Deploy code
+        if: github.event_name == 'push' && github.ref == 'refs/heads/test_application'
+        run: |
+          # Replace this with your deploy command
+          echo "Deploying code"
+
+  build-main:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: main
+      - name: Build code
+        run: |
+          pip install -r requirements.txt
+          python app.py
+      - name: Deploy to Jenkins
+        uses: appleboy/jenkins-action@master
+        with:
+          url: ${{ secrets.JENKINS_URL }}
+          user: ${{ secrets.JENKINS_USERNAME }}
+          token: ${{ secrets.JENKINS_TOKEN }}
+          job: 'My Deploy Job'
