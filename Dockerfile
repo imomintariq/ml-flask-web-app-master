@@ -14,4 +14,4 @@ COPY templates/form.html /usr/src/app/templates/
 EXPOSE 5000
 
 # Run app.py when the container launches
-CMD ["python", "/usr/src/app/app.py"]
+CMD ["python", "/usr/src/app/main.py"]
